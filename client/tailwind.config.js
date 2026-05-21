@@ -1,10 +1,16 @@
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+module.exports = { 
   content: [
     "./src/**/*.{js,jsx,ts,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        gray: {
+          750: '#2d3748', // Custom gray for hover states
+        }
+      }
+    },
   },
   plugins: [],
 }

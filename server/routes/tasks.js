@@ -3,6 +3,41 @@ const auth = require('../middleware/auth');
 const Task = require('../models/Task');
 const Project = require('../models/Project');
 const Activity = require('../models/Activity');
+const Anthropic = require('@anthropic-ai/sdk');
+
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+});
+
+// AI Task Breakdown
+router.post('/ai-breakdown', auth, async (req, res) => {
+  try {
+    const { feature, projectId } = req.body;
+
+    if (!feature || !projectId) {
+      return res.status(400).json({ message: 'Feature and Project ID are required' });
+    }
+
+    const msg = await anthropic.messages.create({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 1000,
+      system: `You are a project management assistant. 
+      Break down the given feature into development tasks.
+      Return ONLY a valid JSON array, no markdown, no extra text.
+      Each task object must have exactly:
+      { "title": string, "description": string, "priority": string }
+      Priority must be exactly: P0, P1, or P2.
+      Generate 5 to 7 tasks maximum.`,
+      messages: [{ role: "user", content: feature }],
+    });
+
+    const tasks = JSON.parse(msg.content[0].text);
+    res.json({ tasks });
+  } catch (err) {
+    console.error('AI Breakdown Error:', err);
+    res.status(500).json({ message: 'AI generation failed: ' + err.message });
+  }
+});
 
 // Create Task
 router.post('/create', auth, async (req, res) => {
